@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
   title: "SaaS Launch Toolkit",
@@ -20,6 +21,7 @@ export default function RootLayout({
           storageKey="saas-toolkit-theme"
         >
           {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
