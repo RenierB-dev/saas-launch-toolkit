@@ -12,6 +12,22 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-6xl mx-auto space-y-12">
+        {/* Early Bird Discount Banner */}
+        <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-6 text-center">
+          <div className="space-y-2">
+            <Badge className="bg-white text-orange-600 font-semibold">
+              🎉 LAUNCH SPECIAL
+            </Badge>
+            <h2 className="text-3xl font-bold">40% Off First Month!</h2>
+            <p className="text-lg opacity-90">
+              Use code <span className="font-mono font-bold bg-white/20 px-3 py-1 rounded">LAUNCH40</span> at checkout
+            </p>
+            <p className="text-sm opacity-75">
+              Limited time offer · Only 47 spots remaining · Ends in 7 days
+            </p>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="text-center space-y-4">
           <h1 className="text-5xl font-bold">Simple, Transparent Pricing</h1>
