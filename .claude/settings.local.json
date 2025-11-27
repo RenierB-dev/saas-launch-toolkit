@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx tsc:*)",
+      "Bash(Select-Object -First 20)",
+      "Bash(taskkill:*)",
+      "Bash($null)",
+      "Bash(Write-Output \"Killed all Node processes\")",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(npm install:*)",
+      "Bash(timeout 5 bash:*)",
+      "Bash(ngrok version:*)",
+      "Bash(choco install:*)",
+      "Bash(curl:*)",
+      "Bash(unzip:*)",
+      "Bash(chmod:*)",
+      "Bash(./ngrok.exe config add-authtoken:*)",
+      "Bash(./ngrok.exe http:*)",
+      "Bash(cat:*)",
+      "Bash(Write-Output \"All Node processes terminated. Please restart dev server with: npm run dev\")",
+      "Bash(powershell -Command \"Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force\")",
+      "Bash(git rebase:*)",
+      "Bash(git reset:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
