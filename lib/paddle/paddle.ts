@@ -27,7 +27,7 @@ export async function getPaddle(): Promise<Paddle | null> {
   }
 }
 
-export function openCheckout(priceId: string, email?: string) {
+export function openCheckout(priceId: string, userId: string, email?: string) {
   getPaddle().then((paddle) => {
     if (!paddle) {
       console.error("Paddle not initialized")
@@ -38,7 +38,10 @@ export function openCheckout(priceId: string, email?: string) {
       items: [{ priceId, quantity: 1 }],
       customer: email ? { email } : undefined,
       customData: {
-        userId: "", // We'll add this after user signup
+        userId: userId, // ✅ Now accepts actual user ID
+      },
+      settings: {
+        successUrl: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/signup/success?userId=${userId}`,
       },
     })
   })
