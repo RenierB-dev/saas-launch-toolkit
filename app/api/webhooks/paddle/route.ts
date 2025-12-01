@@ -2,29 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import crypto from "crypto"
 
-// Validate required environment variables
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-  throw new Error("NEXT_PUBLIC_SUPABASE_URL is required")
-}
-if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error("SUPABASE_SERVICE_ROLE_KEY is required")
-}
-if (!process.env.PADDLE_WEBHOOK_SECRET) {
-  throw new Error("PADDLE_WEBHOOK_SECRET is required for webhook security")
-}
-
-// Initialize Supabase client with service role key for admin access
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-)
-
 // Paddle webhook event types we care about
 type PaddleEventType =
   | "transaction.completed"
@@ -43,6 +20,29 @@ interface PaddleWebhookEvent {
 }
 
 export async function POST(req: NextRequest) {
+  // Validate required environment variables
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL is required")
+  }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required")
+  }
+  if (!process.env.PADDLE_WEBHOOK_SECRET) {
+    throw new Error("PADDLE_WEBHOOK_SECRET is required for webhook security")
+  }
+
+  // Initialize Supabase client with service role key for admin access
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  )
+
   try {
     // Get raw body for signature verification
     const rawBody = await req.text()
@@ -133,27 +133,27 @@ export async function POST(req: NextRequest) {
     // Handle different event types
     switch (event.event_type) {
       case "transaction.completed":
-        await handleTransactionCompleted(event.data)
+        await handleTransactionCompleted(event.data, supabaseAdmin)
         break
 
       case "subscription.created":
-        await handleSubscriptionCreated(event.data)
+        await handleSubscriptionCreated(event.data, supabaseAdmin)
         break
 
       case "subscription.updated":
-        await handleSubscriptionUpdated(event.data)
+        await handleSubscriptionUpdated(event.data, supabaseAdmin)
         break
 
       case "subscription.canceled":
-        await handleSubscriptionCanceled(event.data)
+        await handleSubscriptionCanceled(event.data, supabaseAdmin)
         break
 
       case "subscription.paused":
-        await handleSubscriptionPaused(event.data)
+        await handleSubscriptionPaused(event.data, supabaseAdmin)
         break
 
       case "subscription.resumed":
-        await handleSubscriptionResumed(event.data)
+        await handleSubscriptionResumed(event.data, supabaseAdmin)
         break
 
       default:
@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function handleTransactionCompleted(data: any) {
+async function handleTransactionCompleted(data: any, supabaseAdmin: any) {
   const userId = data.custom_data?.userId
   const customerId = data.customer_id
   const transactionId = data.id
@@ -226,7 +226,7 @@ async function handleTransactionCompleted(data: any) {
   console.log("Transaction completed:", transactionId)
 }
 
-async function handleSubscriptionCreated(data: any) {
+async function handleSubscriptionCreated(data: any, supabaseAdmin: any) {
   const userId = data.custom_data?.userId
   const customerId = data.customer_id
   const subscriptionId = data.id
@@ -268,7 +268,7 @@ async function handleSubscriptionCreated(data: any) {
   }
 }
 
-async function handleSubscriptionUpdated(data: any) {
+async function handleSubscriptionUpdated(data: any, supabaseAdmin: any) {
   const subscriptionId = data.id
 
   // Find subscription by paddle_subscription_id
@@ -301,7 +301,7 @@ async function handleSubscriptionUpdated(data: any) {
   }
 }
 
-async function handleSubscriptionCanceled(data: any) {
+async function handleSubscriptionCanceled(data: any, supabaseAdmin: any) {
   const subscriptionId = data.id
 
   const { error } = await supabaseAdmin
@@ -319,7 +319,7 @@ async function handleSubscriptionCanceled(data: any) {
   }
 }
 
-async function handleSubscriptionPaused(data: any) {
+async function handleSubscriptionPaused(data: any, supabaseAdmin: any) {
   const subscriptionId = data.id
 
   const { error } = await supabaseAdmin
@@ -337,7 +337,7 @@ async function handleSubscriptionPaused(data: any) {
   }
 }
 
-async function handleSubscriptionResumed(data: any) {
+async function handleSubscriptionResumed(data: any, supabaseAdmin: any) {
   const subscriptionId = data.id
 
   const { error } = await supabaseAdmin
