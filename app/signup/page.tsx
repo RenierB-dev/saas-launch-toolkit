@@ -133,9 +133,18 @@ export default function SignupPage() {
       // Account created successfully
       toast.success("Account created! Opening payment...")
 
-      // Open Paddle checkout with user ID
+      // Open Paddle checkout with user ID and error handling
       setTimeout(() => {
-        openCheckout(selectedPlan.priceId, data.user!.id, formData.email)
+        openCheckout(
+          selectedPlan.priceId,
+          data.user!.id,
+          formData.email,
+          (errorMessage) => {
+            // Handle Paddle errors
+            toast.error(errorMessage)
+            setLoading(false)
+          }
+        )
       }, 500)
 
       // Don't stop loading - let user complete payment

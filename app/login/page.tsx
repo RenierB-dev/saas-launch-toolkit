@@ -1,13 +1,49 @@
 "use client"
 
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { createClient } from "@/lib/supabase/client"
+import { toast } from "sonner"
 
 export default function LoginPage() {
+  const router = useRouter()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        toast.error(error.message || "Failed to sign in")
+        console.error("Login error:", error)
+      } else {
+        toast.success("Signed in successfully!")
+        router.push("/dashboard")
+        router.refresh()
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred")
+      console.error("Login error:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600/20 via-blue-600/20 to-purple-800/20 p-4">
       <Card className="w-full max-w-md">
@@ -19,36 +55,48 @@ export default function LoginPage() {
             Sign in to your SaaS Launch Toolkit account
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <Link
-                href="#"
-                className="text-sm text-muted-foreground hover:text-primary"
-              >
-                Forgot password?
-              </Link>
+        <form onSubmit={handleSignIn}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+              />
             </div>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-          <Button className="w-full" size="lg">
-            Sign In
-          </Button>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  href="#"
+                  className="text-sm text-muted-foreground hover:text-primary"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              disabled={loading}
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </Button>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
@@ -61,7 +109,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <Button variant="outline" className="w-full" size="lg">
+          <Button variant="outline" className="w-full" size="lg" type="button">
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -83,6 +131,7 @@ export default function LoginPage() {
             Continue with Google
           </Button>
         </CardContent>
+        </form>
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-sm text-center text-muted-foreground">
             Don&apos;t have an account?{" "}

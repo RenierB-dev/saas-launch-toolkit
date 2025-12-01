@@ -5,14 +5,55 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CheckCircle2, Rocket, Calculator, Calendar, ArrowRight } from "lucide-react"
+import { CheckCircle2, Rocket, Calculator, Calendar, ArrowRight, Loader2 } from "lucide-react"
 import confetti from "canvas-confetti"
+import { createClient } from "@/lib/supabase/client"
+import { getUserSubscription } from "@/lib/paddle/subscription-helpers"
 
 export default function SuccessPage() {
   const router = useRouter()
   const [step, setStep] = useState(0)
+  const [validated, setValidated] = useState(false)
+  const [validating, setValidating] = useState(true)
+
+  // Validate user has active subscription before showing success page
+  useEffect(() => {
+    async function validateAccess() {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+          console.warn("No user found, redirecting to signup")
+          router.replace("/signup")
+          return
+        }
+
+        // Check if user has a subscription
+        const subscription = await getUserSubscription()
+
+        if (!subscription || subscription.status !== "active") {
+          console.warn("No active subscription found, redirecting to signup")
+          router.replace("/signup")
+          return
+        }
+
+        // Valid access - show success page
+        setValidated(true)
+        setValidating(false)
+      } catch (error) {
+        console.error("Error validating access:", error)
+        router.replace("/signup")
+      }
+    }
+
+    validateAccess()
+  }, [router])
 
   useEffect(() => {
+    // Only fire confetti after validation
+    if (!validated) return
+
     // Fire confetti
     const duration = 3000
     const animationEnd = Date.now() + duration
@@ -54,7 +95,7 @@ export default function SuccessPage() {
       clearInterval(interval)
       timers.forEach(clearTimeout)
     }
-  }, [])
+  }, [validated])
 
   const checklistItems = [
     {
@@ -94,6 +135,18 @@ export default function SuccessPage() {
       color: "text-primary"
     }
   ]
+
+  // Show loading state while validating
+  if (validating || !validated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="text-muted-foreground">Verifying your subscription...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">

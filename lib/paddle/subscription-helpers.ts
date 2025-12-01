@@ -62,44 +62,33 @@ export async function getUserSubscription(): Promise<Subscription | null> {
 }
 
 export async function cancelSubscription(subscriptionId: string): Promise<boolean> {
-  const paddleApiKey = process.env.PADDLE_API_KEY
-  const paddleEnvironment = process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || "sandbox"
-
-  if (!paddleApiKey) {
-    console.error("Paddle API key not configured")
-    toast.error("Payment system not configured")
-    return false
-  }
-
-  // Get correct API URL based on environment
-  const baseUrl =
-    paddleEnvironment === "production"
-      ? "https://api.paddle.com"
-      : "https://sandbox-api.paddle.com"
-
   try {
-    const response = await fetch(
-      `${baseUrl}/subscriptions/${subscriptionId}/cancel`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${paddleApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          effective_from: "next_billing_period",
-        }),
-      }
-    )
+    // Get the session token to pass to the API
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error("Failed to cancel subscription:", errorText)
-      toast.error("Failed to cancel subscription. Please try again.")
+    if (!session) {
+      toast.error("You must be logged in to cancel subscription")
       return false
     }
 
-    toast.success("Subscription cancelled successfully")
+    const response = await fetch("/api/subscription/cancel", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session.access_token}`,
+      },
+    })
+
+    if (!response.ok) {
+      const data = await response.json()
+      console.error("Failed to cancel subscription:", data.error)
+      toast.error(data.error || "Failed to cancel subscription")
+      return false
+    }
+
+    const result = await response.json()
+    toast.success(result.message || "Subscription will cancel at end of billing period")
     return true
   } catch (error) {
     console.error("Error canceling subscription:", error)

@@ -28,11 +28,22 @@ export function ThemeProvider({
   storageKey = "ui-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = React.useState<Theme>(
-    () => (typeof window !== "undefined" && (localStorage.getItem(storageKey) as Theme)) || defaultTheme
-  )
+  const [theme, setTheme] = React.useState<Theme>(defaultTheme)
+  const [mounted, setMounted] = React.useState(false)
 
+  // Read from localStorage after mount (client-side only)
   React.useEffect(() => {
+    setMounted(true)
+    const stored = localStorage.getItem(storageKey) as Theme
+    if (stored) {
+      setTheme(stored)
+    }
+  }, [storageKey])
+
+  // Apply theme to document
+  React.useEffect(() => {
+    if (!mounted) return
+
     const root = window.document.documentElement
 
     root.classList.remove("light", "dark")
@@ -48,7 +59,7 @@ export function ThemeProvider({
     }
 
     root.classList.add(theme)
-  }, [theme])
+  }, [theme, mounted])
 
   const value = {
     theme,
@@ -57,6 +68,9 @@ export function ThemeProvider({
       setTheme(theme)
     },
   }
+
+  // Don't render theme-dependent content until mounted
+  if (!mounted) return null
 
   return (
     <ThemeProviderContext.Provider {...props} value={value}>

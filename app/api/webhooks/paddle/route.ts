@@ -87,10 +87,10 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Prevent replay attacks - reject old webhooks (older than 5 minutes)
+    // Prevent replay attacks - reject old webhooks (older than 3 minutes)
     const currentTime = Math.floor(Date.now() / 1000)
     const webhookAge = currentTime - parseInt(timestamp)
-    if (webhookAge > 300) {
+    if (webhookAge > 180) {
       console.error("Webhook timestamp too old:", webhookAge, "seconds")
       return NextResponse.json(
         { error: "Webhook expired" },
@@ -103,6 +103,32 @@ export async function POST(req: NextRequest) {
     const event = body as PaddleWebhookEvent
 
     console.log("Received verified Paddle webhook:", event.event_type)
+
+    // Check if we've already processed this event (prevents duplicate processing)
+    const { data: existingEvent } = await supabaseAdmin
+      .from("webhook_events")
+      .select("id")
+      .eq("event_id", event.event_id)
+      .single()
+
+    if (existingEvent) {
+      console.log("Duplicate webhook event detected, skipping:", event.event_id)
+      return NextResponse.json({ received: true }, { status: 200 })
+    }
+
+    // Record this event as being processed
+    const { error: eventError } = await supabaseAdmin
+      .from("webhook_events")
+      .insert({
+        event_id: event.event_id,
+        event_type: event.event_type,
+      })
+
+    if (eventError) {
+      console.error("Failed to record webhook event:", eventError)
+      // Continue processing even if we can't record the event
+      // This prevents webhook failures if the table doesn't exist yet
+    }
 
     // Handle different event types
     switch (event.event_type) {

@@ -24,7 +24,18 @@
       "Bash(git rebase:*)",
       "Bash(git reset:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(Get-Process ngrok -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object Id, ProcessName, StartTime)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(rm:*)",
+      "Bash(npx supabase:*)",
+      "Bash(node verify-db.js:*)",
+      "Bash(Get-Process node -ErrorAction SilentlyContinue)",
+      "Bash(Stop-Process -Force)",
+      "Bash(netstat:*)"
     ],
     "deny": [],
     "ask": []
